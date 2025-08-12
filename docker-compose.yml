@@ -23,6 +23,28 @@ services:
             - sail
         depends_on:
             - pgsql
+
+    queue:
+        build:
+            context: ./vendor/laravel/sail/runtimes/8.4
+            dockerfile: Dockerfile
+            args:
+                WWWGROUP: '${WWWGROUP}'
+        image: sail-8.4/app
+        extra_hosts:
+            - 'host.docker.internal:host-gateway'
+        environment:
+            WWWUSER: '${WWWUSER}'
+            LARAVEL_SAIL: 1
+        volumes:
+            - '.:/var/www/html'
+        networks:
+            - sail
+        depends_on:
+            - pgsql
+        restart: unless-stopped
+        command: php artisan queue:work --verbose --tries=3 --timeout=90 --sleep=3
+
     pgsql:
         image: 'postgres:17'
         ports:
@@ -37,21 +59,11 @@ services:
             - './vendor/laravel/sail/database/pgsql/create-testing-database.sql:/docker-entrypoint-initdb.d/10-create-testing-database.sql'
         networks:
             - sail
-        healthcheck:
-            test:
-                - CMD
-                - pg_isready
-                - '-q'
-                - '-d'
-                - '${DB_DATABASE}'
-                - '-U'
-                - '${DB_USERNAME}'
-            retries: 3
-            timeout: 5s
+
     pgadmin:
         image: 'dpage/pgadmin4:latest'
         ports:
-            - '${PGADMIN_PORT:-8080}:80'
+            - '${PGADMIN_PORT:-5050}:80'
         environment:
             PGADMIN_DEFAULT_EMAIL: '${PGADMIN_DEFAULT_EMAIL:-admin@example.com}'
             PGADMIN_DEFAULT_PASSWORD: '${PGADMIN_DEFAULT_PASSWORD:-admin}'
@@ -63,9 +75,11 @@ services:
             - sail
         depends_on:
             - pgsql
+
 networks:
     sail:
         driver: bridge
+
 volumes:
     sail-pgsql:
         driver: local

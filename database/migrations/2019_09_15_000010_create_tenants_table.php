@@ -18,10 +18,11 @@ class CreateTenantsTable extends Migration
         Schema::create('tenants', function (Blueprint $table) {
             $table->string('id')->primary();
 
-            // your custom columns may go here
+            // Database configuration
+            $table->foreignId('owner_id')->constrained('users')->onDelete('cascade');
+            $table->string('db_connection_type')->default('local');
 
             $table->timestamps();
-            $table->json('data')->nullable();
         });
     }
 
