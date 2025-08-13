@@ -1,0 +1,132 @@
+<?php
+
+namespace {{ namespace }};
+
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Exception;
+
+class {{ class }}
+{
+    /**
+     * Display a listing of the resource.
+     *
+     * @param array $filters
+     * @param int $perPage
+     * @return LengthAwarePaginator
+     */
+    public function index(array $filters = [], int $perPage = 15): LengthAwarePaginator
+    {
+        // Implement listing logic
+        throw new Exception('Method not implemented');
+    }
+
+    /**
+     * Store a newly created resource.
+     *
+     * @param array $data
+     * @return Model
+     * @throws Exception
+     */
+    public function store(array $data): Model
+    {
+        try {
+            return DB::transaction(function () use ($data) {
+                // Implement creation logic
+                throw new Exception('Method not implemented');
+            });
+        } catch (Exception $e) {
+            Log::error('Failed to create resource in {{ class }}', [
+                'error' => $e->getMessage(),
+                'data' => $data
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param int|string $id
+     * @return Model
+     */
+    public function show($id): Model
+    {
+        // Implement show logic
+        throw new Exception('Method not implemented');
+    }
+
+    /**
+     * Update the specified resource.
+     *
+     * @param int|string $id
+     * @param array $data
+     * @return Model
+     * @throws Exception
+     */
+    public function update($id, array $data): Model
+    {
+        try {
+            return DB::transaction(function () use ($id, $data) {
+                // Implement update logic
+                throw new Exception('Method not implemented');
+            });
+        } catch (Exception $e) {
+            Log::error('Failed to update resource in {{ class }}', [
+                'error' => $e->getMessage(),
+                'id' => $id,
+                'data' => $data
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Remove the specified resource.
+     *
+     * @param int|string $id
+     * @return bool
+     * @throws Exception
+     */
+    public function destroy($id): bool
+    {
+        try {
+            return DB::transaction(function () use ($id) {
+                // Implement deletion logic
+                throw new Exception('Method not implemented');
+            });
+        } catch (Exception $e) {
+            Log::error('Failed to delete resource in {{ class }}', [
+                'error' => $e->getMessage(),
+                'id' => $id
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Bulk delete resources.
+     *
+     * @param array $ids
+     * @return int
+     * @throws Exception
+     */
+    public function bulkDestroy(array $ids): int
+    {
+        try {
+            return DB::transaction(function () use ($ids) {
+                // Implement bulk deletion logic
+                throw new Exception('Method not implemented');
+            });
+        } catch (Exception $e) {
+            Log::error('Failed to bulk delete resources in {{ class }}', [
+                'error' => $e->getMessage(),
+                'ids' => $ids
+            ]);
+            throw $e;
+        }
+    }
+}

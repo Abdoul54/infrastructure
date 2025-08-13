@@ -17,10 +17,18 @@ class CreateTenantsTable extends Migration
     {
         Schema::create('tenants', function (Blueprint $table) {
             $table->string('id')->primary();
+            $table->json('data')->nullable();
 
-            // Database configuration
-            $table->foreignId('owner_id')->constrained('users')->onDelete('cascade');
             $table->string('db_connection_type')->default('local');
+            $table->string('db_host')->nullable();
+            $table->integer('db_port')->nullable();
+            $table->string('db_database')->nullable();
+            $table->string('db_username')->nullable();
+            $table->text('db_password')->nullable();
+            $table->foreignId('owner_id')->constrained('users')->onDelete('cascade');
+
+            $table->index('owner_id');
+            $table->index('db_connection_type');
 
             $table->timestamps();
         });

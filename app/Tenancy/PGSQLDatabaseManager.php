@@ -20,8 +20,8 @@ class PGSQLDatabaseManager extends PostgreSQLDatabaseManager
             return $tenant->db_database;
         }
 
-        // Otherwise use the default name from the trait
-        return $tenant->database()->getName();
+        // Use consistent manual naming for local databases
+        return 'tenant_' . $tenant->getTenantKey();
     }
 
     public function createDatabase(TenantWithDatabase $tenant): bool

@@ -1,0 +1,116 @@
+<?php
+
+namespace {{ namespace }};
+
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Pagination\LengthAwarePaginator;
+
+interface {{ class }}
+{
+    /**
+     * Get all resources with optional filtering and sorting.
+     */
+    public function all(array $filters = [], array $sorts = [], array $columns = ['*'], array $relations = []): Collection;
+
+    /**
+     * Get paginated resources with optional filtering and sorting.
+     */
+    public function paginate(
+        array $filters = [],
+        array $sorts = [],
+        int $perPage = 15,
+        array $columns = ['*'],
+        array $relations = []
+    ): LengthAwarePaginator;
+
+    /**
+     * Find a resource by ID.
+     */
+    public function find($id, array $columns = ['*'], array $relations = [], bool $useCache = false): ?Model;
+
+    /**
+     * Find a resource by ID or throw an exception.
+     */
+    public function findOrFail($id, array $columns = ['*'], array $relations = []): Model;
+
+    /**
+     * Find resources by a specific field.
+     */
+    public function findBy(string $field, $value, string $operator = '=', array $columns = ['*']): Collection;
+
+    /**
+     * Find a single resource by a specific field.
+     */
+    public function findOneBy(string $field, $value, string $operator = '=', array $columns = ['*']): ?Model;
+
+    /**
+     * Create a new resource.
+     */
+    public function create(array $data): Model;
+
+    /**
+     * Create multiple resources.
+     */
+    public function insert(array $data): bool;
+
+    /**
+     * Update a resource.
+     */
+    public function update($id, array $data): bool;
+
+    /**
+     * Update multiple resources by criteria.
+     */
+    public function updateBy(array $criteria, array $data): int;
+
+    /**
+     * Delete a resource.
+     */
+    public function delete($id): bool;
+
+    /**
+     * Delete multiple resources by IDs.
+     */
+    public function deleteMany(array $ids): int;
+
+    /**
+     * Delete resources by criteria.
+     */
+    public function deleteBy(array $criteria): int;
+
+    /**
+     * Restore a soft deleted resource.
+     */
+    public function restore($id): bool;
+
+    /**
+     * Permanently delete a soft deleted resource.
+     */
+    public function forceDelete($id): bool;
+
+    /**
+     * Count resources.
+     */
+    public function count(array $criteria = []): int;
+
+    /**
+     * Check if a resource exists.
+     */
+    public function exists(array $criteria): bool;
+
+    /**
+     * Get resources with a where clause.
+     */
+    public function where(array $where, array $columns = ['*'], array $relations = []): Collection;
+
+    /**
+     * Create or update a resource.
+     */
+    public function updateOrCreate(array $attributes, array $values = []): Model;
+
+    /**
+     * Find resources with specific IDs.
+     */
+    public function findMany(array $ids, array $columns = ['*']): Collection;
+}
