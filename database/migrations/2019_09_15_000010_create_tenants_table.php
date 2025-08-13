@@ -19,6 +19,7 @@ class CreateTenantsTable extends Migration
             $table->string('id')->primary();
             $table->json('data')->nullable();
 
+            $table->string('name')->unique();
             $table->string('db_connection_type')->default('local');
             $table->string('db_host')->nullable();
             $table->integer('db_port')->nullable();

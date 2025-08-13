@@ -39,6 +39,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase
     {
         return [
             'id',
+            'name',
             'db_connection_type',
             'db_host',
             'db_port',

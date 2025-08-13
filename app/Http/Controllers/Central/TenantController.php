@@ -8,6 +8,7 @@ use App\Http\Requests\Central\Tenant\TransferOwnershipRequest;
 use App\Http\Resources\TenantCollection;
 use App\Http\Resources\TenantResource;
 use App\Services\Central\TenantService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -30,12 +31,24 @@ class TenantController extends Controller
      * Get all tenants.
      * This endpoint retrieves a list of all tenants.
      *
+     * @queryParam page integer The page number to retrieve. Example: 1
+     * @queryParam per_page integer The number of items per page. Example: 10
+     * @queryParam sort_by  string The field to sort by. Enum: created_at,id,name,updated_at,db_connection_type,owner_id.
+     * @queryParam sort_order string The order to sort (asc or desc). Enum: asc,desc.
+     * @queryParam search string The search term to filter tenants. Example: tenant1
+     *
      * @authenticated
      */
-    public function list_tenants()
+    public function list_tenants(Request $request)
     {
         try {
-            $tenants = $this->tenantService->listTenants();
+            $params['per_page'] = $request->get('per_page', 15);
+            $params['page'] = $request->get('page', 1);
+            $params['sort_by'] = $request->get('sort_by', 'created_at');
+            $params['sort_order'] = $request->get('sort_order', 'desc');
+            $params['search'] = $request->get('search', null);
+
+            $tenants = $this->tenantService->listTenants($params);
 
             if (isset($tenants['error'])) {
                 return response()->json($tenants, 422);
