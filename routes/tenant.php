@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Tenant\AuthController;
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomainOrSubdomain;
@@ -29,5 +30,13 @@ Route::middleware([
             'message' => 'Welcome to the tenant API!',
             'tenant_id' => tenant('id'),
         ]);
+    });
+
+    Route::prefix('api')->group(function () {
+        Route::prefix('auth')->group(function () {
+            Route::post('/login', [AuthController::class, 'login']);
+            Route::post('/logout', [AuthController::class, 'logout']);
+            Route::post('/register', [AuthController::class, 'register']);
+        });
     });
 });
