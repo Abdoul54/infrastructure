@@ -1,0 +1,456 @@
+<?php
+
+namespace {{ namespace }};
+
+use {{ interfaceNamespace }};
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
+
+class {{ class }} implements {{ interface }}
+{
+    /**
+     * Create a new repository instance.
+     */
+    public function __construct()
+    {
+        //
+    }
+
+    /**
+     * Get all resources with optional filtering and sorting.
+     *
+     * @param array $filters
+     * @param array $sorts
+     * @param array $columns
+     * @param array $relations
+     * @return Collection
+     */
+    public function all(array $filters = [], array $sorts = [], array $columns = ['*'], array $relations = []): Collection
+    {
+        $query = $this->buildQuery($filters, $sorts, $relations);
+        return $query->get($columns);
+    }
+
+    /**
+     * Get paginated resources with optional filtering and sorting.
+     *
+     * @param array $filters
+     * @param array $sorts
+     * @param int $perPage
+     * @param array $columns
+     * @param array $relations
+     * @return LengthAwarePaginator
+     */
+    public function paginate(
+        array $filters = [],
+        array $sorts = [],
+        int $perPage = 15,
+        array $columns = ['*'],
+        array $relations = []
+    ): LengthAwarePaginator {
+        $query = $this->buildQuery($filters, $sorts, $relations);
+        return $query->paginate($perPage, $columns);
+    }
+
+    /**
+     * Find a resource by ID.
+     *
+     * @param int|string $id
+     * @param array $columns
+     * @param array $relations
+     * @param bool $useCache
+     * @return Model|null
+     */
+    public function find($id, array $columns = ['*'], array $relations = [], bool $useCache = false): ?Model
+    {
+        if ($useCache) {
+            return Cache::remember(
+                $this->getCacheKey('find', $id),
+                $this->getCacheTTL(),
+                fn() => $this->getQuery()->with($relations)->find($id, $columns)
+            );
+        }
+
+        return $this->getQuery()->with($relations)->find($id, $columns);
+    }
+
+    /**
+     * Find a resource by ID or throw an exception.
+     *
+     * @param int|string $id
+     * @param array $columns
+     * @param array $relations
+     * @return Model
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     */
+    public function findOrFail($id, array $columns = ['*'], array $relations = []): Model
+    {
+        return $this->getQuery()->with($relations)->findOrFail($id, $columns);
+    }
+
+    /**
+     * Find resources by a specific field.
+     *
+     * @param string $field
+     * @param mixed $value
+     * @param string $operator
+     * @param array $columns
+     * @return Collection
+     */
+    public function findBy(string $field, $value, string $operator = '=', array $columns = ['*']): Collection
+    {
+        return $this->getQuery()->where($field, $operator, $value)->get($columns);
+    }
+
+    /**
+     * Find a single resource by a specific field.
+     *
+     * @param string $field
+     * @param mixed $value
+     * @param string $operator
+     * @param array $columns
+     * @return Model|null
+     */
+    public function findOneBy(string $field, $value, string $operator = '=', array $columns = ['*']): ?Model
+    {
+        return $this->getQuery()->where($field, $operator, $value)->first($columns);
+    }
+
+    /**
+     * Create a new resource.
+     *
+     * @param array $data
+     * @return Model
+     */
+    public function create(array $data): Model
+    {
+        return DB::transaction(function () use ($data) {
+            $model = $this->getQuery()->create($data);
+            $this->clearCache();
+            return $model;
+        });
+    }
+
+    /**
+     * Create multiple resources.
+     *
+     * @param array $data
+     * @return bool
+     */
+    public function insert(array $data): bool
+    {
+        return DB::transaction(function () use ($data) {
+            $result = $this->getQuery()->insert($data);
+            $this->clearCache();
+            return $result;
+        });
+    }
+
+    /**
+     * Update a resource.
+     *
+     * @param int|string $id
+     * @param array $data
+     * @return bool
+     */
+    public function update($id, array $data): bool
+    {
+        return DB::transaction(function () use ($id, $data) {
+            $model = $this->find($id);
+            
+            if (!$model) {
+                return false;
+            }
+
+            $result = $model->update($data);
+            $this->clearCache();
+            return $result;
+        });
+    }
+
+    /**
+     * Update multiple resources by criteria.
+     *
+     * @param array $criteria
+     * @param array $data
+     * @return int
+     */
+    public function updateBy(array $criteria, array $data): int
+    {
+        return DB::transaction(function () use ($criteria, $data) {
+            $query = $this->getQuery();
+            
+            foreach ($criteria as $field => $value) {
+                $query->where($field, $value);
+            }
+            
+            $count = $query->update($data);
+            $this->clearCache();
+            return $count;
+        });
+    }
+
+    /**
+     * Delete a resource.
+     *
+     * @param int|string $id
+     * @return bool
+     */
+    public function delete($id): bool
+    {
+        return DB::transaction(function () use ($id) {
+            $model = $this->find($id);
+            
+            if (!$model) {
+                return false;
+            }
+
+            $result = $model->delete();
+            $this->clearCache();
+            return $result;
+        });
+    }
+
+    /**
+     * Delete multiple resources by IDs.
+     *
+     * @param array $ids
+     * @return int
+     */
+    public function deleteMany(array $ids): int
+    {
+        return DB::transaction(function () use ($ids) {
+            $count = $this->getQuery()->whereIn('id', $ids)->delete();
+            $this->clearCache();
+            return $count;
+        });
+    }
+
+    /**
+     * Delete resources by criteria.
+     *
+     * @param array $criteria
+     * @return int
+     */
+    public function deleteBy(array $criteria): int
+    {
+        return DB::transaction(function () use ($criteria) {
+            $query = $this->getQuery();
+            
+            foreach ($criteria as $field => $value) {
+                $query->where($field, $value);
+            }
+            
+            $count = $query->delete();
+            $this->clearCache();
+            return $count;
+        });
+    }
+
+    /**
+     * Restore a soft deleted resource.
+     *
+     * @param int|string $id
+     * @return bool
+     */
+    public function restore($id): bool
+    {
+        $model = $this->getQuery()->withTrashed()->find($id);
+        
+        if (!$model) {
+            return false;
+        }
+
+        $result = $model->restore();
+        $this->clearCache();
+        return $result;
+    }
+
+    /**
+     * Permanently delete a soft deleted resource.
+     *
+     * @param int|string $id
+     * @return bool
+     */
+    public function forceDelete($id): bool
+    {
+        return DB::transaction(function () use ($id) {
+            $model = $this->getQuery()->withTrashed()->find($id);
+            
+            if (!$model) {
+                return false;
+            }
+
+            $result = $model->forceDelete();
+            $this->clearCache();
+            return $result;
+        });
+    }
+
+    /**
+     * Count resources.
+     *
+     * @param array $criteria
+     * @return int
+     */
+    public function count(array $criteria = []): int
+    {
+        $query = $this->getQuery();
+        
+        foreach ($criteria as $field => $value) {
+            $query->where($field, $value);
+        }
+        
+        return $query->count();
+    }
+
+    /**
+     * Check if a resource exists.
+     *
+     * @param array $criteria
+     * @return bool
+     */
+    public function exists(array $criteria): bool
+    {
+        $query = $this->getQuery();
+        
+        foreach ($criteria as $field => $value) {
+            $query->where($field, $value);
+        }
+        
+        return $query->exists();
+    }
+
+    /**
+     * Get resources with a where clause.
+     *
+     * @param array $where
+     * @param array $columns
+     * @param array $relations
+     * @return Collection
+     */
+    public function where(array $where, array $columns = ['*'], array $relations = []): Collection
+    {
+        $query = $this->getQuery()->with($relations);
+
+        foreach ($where as $field => $value) {
+            if (is_array($value)) {
+                [$operator, $val] = $value;
+                $query->where($field, $operator, $val);
+            } else {
+                $query->where($field, $value);
+            }
+        }
+
+        return $query->get($columns);
+    }
+
+    /**
+     * Create or update a resource.
+     *
+     * @param array $attributes
+     * @param array $values
+     * @return Model
+     */
+    public function updateOrCreate(array $attributes, array $values = []): Model
+    {
+        $result = $this->getQuery()->updateOrCreate($attributes, $values);
+        $this->clearCache();
+        return $result;
+    }
+
+    /**
+     * Find resources with specific IDs.
+     *
+     * @param array $ids
+     * @param array $columns
+     * @return Collection
+     */
+    public function findMany(array $ids, array $columns = ['*']): Collection
+    {
+        return $this->getQuery()->whereIn('id', $ids)->get($columns);
+    }
+
+    /**
+     * Build query with filters and sorts.
+     *
+     * @param array $filters
+     * @param array $sorts
+     * @param array $relations
+     * @return Builder
+     */
+    protected function buildQuery(array $filters = [], array $sorts = [], array $relations = []): Builder
+    {
+        $query = $this->getQuery()->with($relations);
+
+        // Apply filters
+        foreach ($filters as $field => $value) {
+            if (is_array($value)) {
+                $query->whereIn($field, $value);
+            } elseif (is_null($value)) {
+                $query->whereNull($field);
+            } else {
+                $query->where($field, $value);
+            }
+        }
+
+        // Apply sorts
+        foreach ($sorts as $field => $direction) {
+            $query->orderBy($field, $direction);
+        }
+
+        return $query;
+    }
+
+    /**
+     * Get the base query builder.
+     *
+     * @return Builder
+     */
+    protected function getQuery(): Builder
+    {
+        // This should be implemented in concrete repository classes
+        throw new \RuntimeException('getQuery method must be implemented in concrete repository class');
+    }
+
+    /**
+     * Clear repository cache.
+     *
+     * @return void
+     */
+    protected function clearCache(): void
+    {
+        // Override in concrete class if caching is used
+    }
+
+    /**
+     * Get cache key.
+     *
+     * @param string $method
+     * @param mixed ...$params
+     * @return string
+     */
+    protected function getCacheKey(string $method, ...$params): string
+    {
+        return sprintf(
+            '%s:%s:%s',
+            class_basename($this),
+            $method,
+            md5(serialize($params))
+        );
+    }
+
+    /**
+     * Get cache TTL in seconds.
+     *
+     * @return int
+     */
+    protected function getCacheTTL(): int
+    {
+        return 3600; // 1 hour default
+    }
+}

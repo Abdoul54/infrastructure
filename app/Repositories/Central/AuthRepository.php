@@ -3,22 +3,30 @@
 namespace App\Repositories\Central;
 
 use App\Models\User;
-use App\Repositories\Central\Interfaces\AuthRepositoryInterface;
+use App\Repositories\Central\Contracts\AuthRepositoryInterface;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 
 class AuthRepository implements AuthRepositoryInterface
 {
     public function login($data)
     {
         try {
-            $data['password'] = bcrypt($data['password']);
-            $user = User::create($data);
+            // Attempt to authenticate the user
+            if (Auth::attempt(['email' => $data['email'], 'password' => $data['password']])) {
+                $user = Auth::user();
+                $token = $user->createToken('api-token')->plainTextToken;
 
-            $token = $user->createToken('api-token')->plainTextToken;
-
-            return [
-                'user' => $user,
-                'token' => $token
-            ];
+                return [
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'token' => $token
+                ];
+            } else {
+                return [
+                    'error' => 'Invalid credentials'
+                ];
+            }
         } catch (\Exception $e) {
             return [
                 'error' => 'Login failed',
@@ -29,11 +37,34 @@ class AuthRepository implements AuthRepositoryInterface
 
     public function register($data)
     {
-        // Implement register logic
+        try {
+            $data['password'] = Hash::make($data['password']);
+            $user = User::create($data);
+
+            $token = $user->createToken('api-token')->plainTextToken;
+
+            return [
+                'user' => $user,
+                'token' => $token
+            ];
+        } catch (\Exception $e) {
+            return [
+                'error' => 'Registration failed',
+                'message' => $e->getMessage()
+            ];
+        }
     }
 
     public function logout($data)
     {
-        // Implement logout logic
+        try {
+            Auth::user()->tokens()->delete();
+            return ['message' => 'Logout successful'];
+        } catch (\Exception $e) {
+            return [
+                'error' => 'Logout failed',
+                'message' => $e->getMessage()
+            ];
+        }
     }
 }

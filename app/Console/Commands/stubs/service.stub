@@ -1,0 +1,43 @@
+<?php
+
+namespace {{ namespace }};
+
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Exception;
+
+class {{ class }}
+{
+    /**
+     * Create a new service instance.
+     */
+    public function __construct()
+    {
+        //
+    }
+
+    /**
+     * Example method with transaction support
+     *
+     * @param array $data
+     * @return mixed
+     * @throws Exception
+     */
+    public function process(array $data)
+    {
+        try {
+            return DB::transaction(function () use ($data) {
+                // Your business logic here
+                
+                return $data;
+            });
+        } catch (Exception $e) {
+            Log::error('{{ class }} error: ' . $e->getMessage(), [
+                'data' => $data,
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            throw $e;
+        }
+    }
+}

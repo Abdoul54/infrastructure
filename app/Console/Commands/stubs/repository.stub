@@ -1,0 +1,16 @@
+<?php
+
+namespace {{ namespace }};
+
+use {{ interfaceNamespace }};
+
+class {{ class }} implements {{ interface }}
+{
+    /**
+     * Create a new repository instance.
+     */
+    public function __construct()
+    {
+        //
+    }
+}

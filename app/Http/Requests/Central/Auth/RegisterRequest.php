@@ -11,7 +11,7 @@ class RegisterRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true; // Allow all users to register
     }
 
     /**
@@ -42,6 +42,7 @@ class RegisterRequest extends FormRequest
             'email.required' => 'Email is required',
             'email.email' => 'Email must be a valid email address',
             'email.max' => 'Email must not exceed 255 characters',
+            'email.unique' => 'This email is already registered',
             'password.required' => 'Password is required',
             'password.min' => 'Password must be at least 8 characters long',
             'password.confirmed' => 'Password confirmation does not match',

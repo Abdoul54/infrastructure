@@ -13,7 +13,7 @@ Route::prefix('auth')->group(function () {
 
 
 Route::middleware(['auth:sanctum'])->prefix('tenants')->group(function () {
-    Route::get('/', [TenantController::class, 'all']);
+    Route::get('/', [TenantController::class, 'list_tenants']);
     Route::post('/', [TenantController::class, 'create']);
     Route::get('/{id}', [TenantController::class, 'show']);
     Route::delete('/{id}', [TenantController::class, 'delete']);

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Central;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Central\Auth\LoginRequest;
+use App\Http\Requests\Central\Auth\RegisterRequest;
 use App\Http\Resources\GenericResource;
 use App\Models\User;
 use App\Services\Central\AuthService;
@@ -19,7 +20,6 @@ use Knuckles\Scribe\Attributes\Group;
  */
 class AuthController extends Controller
 {
-
     protected $authService;
 
     public function __construct(AuthService $authService)
@@ -31,24 +31,27 @@ class AuthController extends Controller
      * Register a new user.
      * This endpoint allows users to create a new account.
      */
-    public function register(Request $request)
+    public function register(RegisterRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
-        ]);
+        try {
+            $data = $request->validated();
+            $result = $this->authService->register($data);
 
-        $data['password'] = bcrypt($data['password']);
-        $user = User::create($data);
+            if (isset($result['error'])) {
+                throw new \Exception($result['error'], 422);
+            }
 
-        $token = $user->createToken('api-token')->plainTextToken;
-
-        return response()->json([
-            'message' => 'Registration successful',
-            'user' => $user,
-            'token' => $token
-        ], 201);
+            return response()->json([
+                'message' => 'Registration successful',
+                'user' => $result['user'],
+                'token' => $result['token']
+            ], 201);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'error' => 'Registration failed',
+                'message' => $th->getMessage()
+            ], $th->getCode() ?: 422);
+        }
     }
 
     /**
@@ -59,9 +62,7 @@ class AuthController extends Controller
     {
         try {
             $data = $request->validated();
-
             $result = $this->authService->login($data);
-
 
             if (isset($result['error'])) {
                 throw new \Exception($result['error'], 401);
@@ -69,8 +70,7 @@ class AuthController extends Controller
 
             return response()->json([
                 'message' => 'Login successful',
-                'user' => new GenericResource($result, ['name', 'email']),
-                'token' => $result['token']
+                'user' => new GenericResource($result, ['name', 'email', 'token']),
             ]);
         } catch (\Throwable $th) {
             return response()->json([
@@ -85,13 +85,23 @@ class AuthController extends Controller
      * This endpoint allows users to log out and invalidate their authentication token.
      * @authenticated
      */
-    public function logout(Request $request)
+    public function logout(Request $request): JsonResponse
     {
-        $user = Auth::user();
-        $user->tokens()->delete();
+        try {
+            $result = $this->authService->logout([]);
 
-        return response()->json([
-            'message' => 'Logout successful'
-        ]);
+            if (isset($result['error'])) {
+                throw new \Exception($result['error'], 422);
+            }
+
+            return response()->json([
+                'message' => 'Logout successful'
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'error' => 'Logout failed',
+                'message' => $th->getMessage()
+            ], 500);
+        }
     }
 }
