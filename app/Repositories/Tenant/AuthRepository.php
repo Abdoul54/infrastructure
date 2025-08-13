@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Repositories\Central;
+namespace App\Repositories\Tenant;
 
 use App\Models\User;
-use App\Repositories\Central\Contracts\AuthRepositoryInterface;
+use App\Repositories\Tenant\Contracts\AuthRepositoryInterface;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 

@@ -24,6 +24,7 @@ class CreateTenantRequest extends FormRequest
     {
         return [
             // 'id' => 'required|string|alpha_dash|unique:tenants,id',
+            'name' => 'required|string|unique:tenants,name',
             'domain' => 'required|string|unique:domains,domain',
 
             // Database configuration
@@ -43,6 +44,7 @@ class CreateTenantRequest extends FormRequest
     {
         return [
             // 'id.required' => 'The tenant ID is required.',
+            'name.required' => 'The tenant name is required.',
             'domain.required' => 'The tenant domain is required.',
             'db_connection_type.required' => 'The database connection type is required.',
             'db_host.required_if' => 'The database host is required when using an external connection.',

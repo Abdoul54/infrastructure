@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Repositories\Tenant\AuthRepository;
+use App\Repositories\Tenant\Contracts\AuthRepositoryInterface;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -94,7 +96,7 @@ class TenancyServiceProvider extends ServiceProvider
 
     public function register()
     {
-        //
+        $this->app->bind(AuthRepositoryInterface::class, AuthRepository::class);
     }
 
     public function boot()

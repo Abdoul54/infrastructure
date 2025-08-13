@@ -1,12 +1,11 @@
 <?php
 
-namespace App\Http\Controllers\Central;
+namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Central\Auth\LoginRequest;
-use App\Http\Requests\Central\Auth\RegisterRequest;
-use App\Http\Resources\GenericResource;
-use App\Services\Central\AuthService;
+use App\Http\Requests\Tenant\Auth\LoginRequest;
+use App\Http\Requests\Tenant\Auth\RegisterRequest;
+use App\Services\Tenant\AuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Knuckles\Scribe\Attributes\Group;

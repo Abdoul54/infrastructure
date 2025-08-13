@@ -16,9 +16,9 @@ class TenantService
         $this->tenantRepository = $tenantRepository;
     }
 
-    public function listTenants()
+    public function listTenants($params)
     {
-        return $this->tenantRepository->listTenants();
+        return $this->tenantRepository->listTenants($params);
     }
 
     public function findTenantById(string $id)
@@ -35,5 +35,10 @@ class TenantService
     public function deleteTenant(string $id)
     {
         return $this->tenantRepository->deleteTenant($id);
+    }
+
+    public function transferOwnership(string $tenantId, int $newOwnerId)
+    {
+        return $this->tenantRepository->transferOwnership($tenantId, $newOwnerId);
     }
 }
