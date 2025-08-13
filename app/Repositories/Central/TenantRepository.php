@@ -3,6 +3,7 @@
 namespace App\Repositories\Central;
 
 use App\Models\Tenant;
+use App\Models\User;
 use App\Repositories\Central\Contracts\TenantRepositoryInterface;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
@@ -202,6 +203,39 @@ class TenantRepository implements TenantRepositoryInterface
                 'error' => $e->getMessage()
             ]);
             throw $e;
+        }
+    }
+
+    public function transferOwnership(string $tenantId, int $newOwnerId)
+    {
+        try {
+            $tenant = Tenant::findOrFail($tenantId);
+            $newOwner = User::findOrFail($newOwnerId);
+            $userId = Auth::id();
+
+            if ($tenant->owner_id !== $userId) {
+                throw new \Exception('You do not have permission to transfer ownership of this tenant');
+            }
+
+            $tenant->owner_id = $newOwner->id;
+            $tenant->save();
+
+            return [
+                'success' => true,
+                'message' => 'Tenant ownership transferred successfully',
+                'tenant' => $tenant
+            ];
+        } catch (\Throwable $th) {
+            Log::error('Failed to transfer tenant ownership', [
+                'tenant_id' => $tenantId,
+                'new_owner_id' => $newOwnerId,
+                'error' => $th->getMessage()
+            ]);
+            return [
+                'success' => false,
+                'error' => 'Failed to transfer tenant ownership',
+                'message' => $th->getMessage()
+            ];
         }
     }
 }

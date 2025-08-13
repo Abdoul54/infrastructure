@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Central;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Central\Tenant\CreateTenantRequest;
+use App\Http\Requests\Central\Tenant\TransferOwnershipRequest;
 use App\Http\Resources\TenantCollection;
 use App\Http\Resources\TenantResource;
 use App\Services\Central\TenantService;
@@ -141,6 +142,37 @@ class TenantController extends Controller
                 'success' => false,
                 'error' => 'Failed to delete tenant',
                 'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Transfer ownership of a tenant.
+     * This endpoint allows the current owner of a tenant to transfer ownership to another user.
+     *
+     * @authenticated
+     */
+    public function transferOwnership(TransferOwnershipRequest $request, $id)
+    {
+        try {
+            $validated = $request->validated();
+            $result = $this->tenantService->transferOwnership($id, $validated['new_owner_id']);
+
+            if (isset($result['error'])) {
+                return response()->json($result, 422);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Tenant ownership transferred successfully',
+                'tenant' => $result['tenant']
+            ]);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to transfer tenant ownership',
+                'message' => $th->getMessage()
             ], 500);
         }
     }

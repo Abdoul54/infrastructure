@@ -17,4 +17,5 @@ Route::middleware(['auth:sanctum'])->prefix('tenants')->group(function () {
     Route::post('/', [TenantController::class, 'create']);
     Route::get('/{id}', [TenantController::class, 'show']);
     Route::delete('/{id}', [TenantController::class, 'delete']);
+    Route::post('/{id}/transfer-ownership', [TenantController::class, 'transferOwnership']);
 });

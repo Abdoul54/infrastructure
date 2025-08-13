@@ -8,4 +8,5 @@ interface TenantRepositoryInterface
     public function findTenantById(string $id);
     public function createTenant(array $data);
     public function deleteTenant(string $id);
+    public function transferOwnership(string $tenantId, int $newOwnerId);
 }

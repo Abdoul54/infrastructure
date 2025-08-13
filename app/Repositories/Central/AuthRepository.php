@@ -13,7 +13,7 @@ class AuthRepository implements AuthRepositoryInterface
     {
         try {
             // Attempt to authenticate the user
-            if (Auth::attempt(['email' => $data['email'], 'password' => $data['password']])) {
+            if (Auth::guard('web')->attempt(['email' => $data['email'], 'password' => $data['password']])) {
                 $user = Auth::user();
                 $token = $user->createToken('api-token')->plainTextToken;
 
@@ -23,12 +23,11 @@ class AuthRepository implements AuthRepositoryInterface
                     'token' => $token
                 ];
             } else {
-                return [
-                    'error' => 'Invalid credentials'
-                ];
+                throw new \Exception('Invalid credentials', 401);
             }
         } catch (\Exception $e) {
             return [
+                'success' => false,
                 'error' => 'Login failed',
                 'message' => $e->getMessage()
             ];
@@ -49,6 +48,7 @@ class AuthRepository implements AuthRepositoryInterface
             ];
         } catch (\Exception $e) {
             return [
+                'success' => false,
                 'error' => 'Registration failed',
                 'message' => $e->getMessage()
             ];
@@ -62,6 +62,7 @@ class AuthRepository implements AuthRepositoryInterface
             return ['message' => 'Logout successful'];
         } catch (\Exception $e) {
             return [
+                'success' => false,
                 'error' => 'Logout failed',
                 'message' => $e->getMessage()
             ];

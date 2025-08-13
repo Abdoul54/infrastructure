@@ -36,4 +36,9 @@ class TenantService
     {
         return $this->tenantRepository->deleteTenant($id);
     }
+
+    public function transferOwnership(string $tenantId, int $newOwnerId)
+    {
+        return $this->tenantRepository->transferOwnership($tenantId, $newOwnerId);
+    }
 }
